@@ -1,2 +1,2 @@
 # Nutrimind-Backend-Python
-All application will be dev in Python 
+We going to use python to build some IA application
