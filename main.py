@@ -1,33 +1,26 @@
-# type: ignore # Importa as bibliotecas necessárias
-from flask import Flask, request, jsonify
-from flask_cors import CORS  # type: ignore # Permite requisições de outros domínios
-# from waitress import serve  # type: ignore # Servidor WSGI para produção
+from flask import Flask, request, jsonify  # Flask app to handle GPT queries
+from gpt_engine import ask_gpt  # Function to interact with OpenAI's GPT model
+
+app = Flask(__name__)  # Initialize Flask app
 
 
-app_Flask = Flask(__name__)  # Cria uma instância do Flask
-# Permite caracteres especiais no JSON
-app_Flask.config["JSON_AS_ASCII"] = False
-CORS(app_Flask)  # Permite requisições de outros domínios
+@app.route("/ask", methods=["POST"])  # Define route for asking questions
+def ask():  # Handle POST requests to /ask
+    data = request.get_json()  # Get JSON data from the request
+    # Extract the 'question' field from the JSON data
+    question = data.get("question")
+
+    if not question:  # Check if 'question' is provided
+        # Return error if 'question' is missing
+        return jsonify({"error": "The 'question' field is required."}), 400
+
+    try:  # Call the GPT engine to get an answer
+        answer = ask_gpt(question)  # Get the answer from GPT
+        return jsonify({"answer": answer})  # Return the answer in JSON format
+    except Exception as e:  # Handle any exceptions that occur
+        # Return error if an exception occurs
+        return jsonify({"error": str(e)}), 500
 
 
-@app_Flask.route("/", methods=["GET"])  # Rota para a página inicial
-def index():
-    return jsonify({"message": "Bem-vindo à Primeira aplicação RAG"})
-
-
-@app_Flask.route("/ask", methods=["POST"])  # Rota para receber perguntas
-def ask():  # Recebe perguntas via POST
-    data = request.get_json()
-    question = data.get("question", "")
-    answer = perguntar_ao_gpt(question)  # Chama a função para perguntar ao GPT
-    return jsonify({"answer": answer})  # Retorna a resposta em JSON
-
-
-# Criei a função para perguntar ao GPT (simulada aqui)
-def perguntar_ao_gpt(question):
-    # Aqui vamos integrar com a API do GPT
-    return f"Resposta mocada para a pergunta: {question}"
-
-
-if __name__ == "__main__":
-    app_Flask.run(debug=True, port=5000)
+if __name__ == "__main__":  # Run the Flask app
+    app.run(port=5000, host="localhost", debug=True)
